@@ -1,23 +1,20 @@
 package com.project.bookapp.repository;
 
+import com.project.bookapp.exceptions.DataProcessingException;
 import com.project.bookapp.model.Book;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.query.Query;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 @Repository
+@RequiredArgsConstructor
 public class BookRepositoryImpl implements BookRepository {
 
     private final SessionFactory sessionFactory;
-
-    @Autowired
-    public BookRepositoryImpl(SessionFactory sessionFactory) {
-        this.sessionFactory = sessionFactory;
-    }
 
     @Override
     public Book save(Book book) {
@@ -33,7 +30,7 @@ public class BookRepositoryImpl implements BookRepository {
             if (transaction != null) {
                 transaction.rollback();
             }
-            throw new RuntimeException("Failed to save actor", e);
+            throw new DataProcessingException("Failed to save book", e);
         } finally {
             session.close();
         }
@@ -46,6 +43,10 @@ public class BookRepositoryImpl implements BookRepository {
                     "from Book",Book.class
             );
             return getAllBooksQuery.getResultList();
+        } catch (Exception e) {
+            throw new DataProcessingException("An unexpected error occurred "
+                    + "while retrieving books: " + e.getMessage());
         }
+
     }
 }
