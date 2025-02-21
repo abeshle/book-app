@@ -1,7 +1,6 @@
 package com.project.bookapp.repository;
 
 import com.project.bookapp.exceptions.DataProcessingException;
-import com.project.bookapp.exceptions.EntityNotFoundException;
 import com.project.bookapp.model.Book;
 import java.util.List;
 import java.util.Optional;
@@ -43,7 +42,7 @@ public class BookRepositoryImpl implements BookRepository {
         try (Session session = sessionFactory.openSession()) {
             return Optional.ofNullable(session.get(Book.class, id));
         } catch (Exception e) {
-            throw new EntityNotFoundException("Book with id " + id + " not found");
+            throw new DataProcessingException("Book with id " + id + " not found");
         }
     }
 
@@ -55,8 +54,7 @@ public class BookRepositoryImpl implements BookRepository {
             );
             return getAllBooksQuery.getResultList();
         } catch (Exception e) {
-            throw new DataProcessingException("An unexpected error occurred "
-                    + "while retrieving books: " + e.getMessage());
+            throw new DataProcessingException("Can't find all books");
         }
     }
 }
