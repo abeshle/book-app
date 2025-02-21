@@ -1,8 +1,10 @@
 package com.project.bookapp.repository;
 
 import com.project.bookapp.exceptions.DataProcessingException;
+import com.project.bookapp.exceptions.EntityNotFoundException;
 import com.project.bookapp.model.Book;
 import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -33,6 +35,15 @@ public class BookRepositoryImpl implements BookRepository {
             throw new DataProcessingException("Failed to save book", e);
         } finally {
             session.close();
+        }
+    }
+
+    @Override
+    public Optional<Book> findById(Long id) {
+        try (Session session = sessionFactory.openSession()) {
+            return Optional.ofNullable(session.get(Book.class, id));
+        } catch (Exception e) {
+            throw new EntityNotFoundException("Book with id " + id + " not found");
         }
     }
 
