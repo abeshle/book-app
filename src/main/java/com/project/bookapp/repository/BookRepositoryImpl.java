@@ -58,6 +58,5 @@ public class BookRepositoryImpl implements BookRepository {
             throw new DataProcessingException("An unexpected error occurred "
                     + "while retrieving books: " + e.getMessage());
         }
-
     }
 }
