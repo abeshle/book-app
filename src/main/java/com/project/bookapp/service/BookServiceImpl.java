@@ -2,6 +2,7 @@ package com.project.bookapp.service;
 
 import com.project.bookapp.dto.BookDto;
 import com.project.bookapp.dto.CreateBookRequestDto;
+import com.project.bookapp.exceptions.EntityNotFoundException;
 import com.project.bookapp.mapper.BookMapper;
 import com.project.bookapp.repository.BookRepository;
 import java.util.List;
@@ -28,6 +29,7 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public BookDto getById(Long id) {
-        return bookMapper.toDto(bookRepository.findById(id).orElseThrow());
+        return bookMapper.toDto(bookRepository.findById(id).orElseThrow(() ->
+                new EntityNotFoundException("Entity with id " + id + " not found")));
     }
 }
