@@ -32,4 +32,9 @@ public class BookServiceImpl implements BookService {
         return bookMapper.toDto(bookRepository.findById(id).orElseThrow(() ->
                 new EntityNotFoundException("Entity with id " + id + " not found")));
     }
+
+    @Override
+    public void deleteById(Long id) {
+        bookRepository.deleteById(id);
+    }
 }
