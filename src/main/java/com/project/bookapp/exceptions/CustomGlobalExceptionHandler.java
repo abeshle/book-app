@@ -5,7 +5,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -24,12 +23,11 @@ public class CustomGlobalExceptionHandler extends ResponseEntityExceptionHandler
             HttpStatusCode status,
             WebRequest request) {
         Map<String,Object> body = new LinkedHashMap<>();
-        body.put("Timestamp",LocalDateTime.now());
-        body.put("Status",HttpStatus.BAD_REQUEST);
+        body.put("Timestamp", LocalDateTime.now());
         List<String> errors = ex.getBindingResult().getAllErrors().stream()
                 .map(this::getErrorsMessage)
                 .toList();
-        body.put("Errors",errors);
+        body.put("Errors", errors);
         
         return new ResponseEntity<>(body,headers,status);
     }
