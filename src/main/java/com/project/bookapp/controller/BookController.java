@@ -9,7 +9,6 @@ import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -52,10 +51,10 @@ public class BookController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<BookDto> updateBook(@PathVariable Long id,
+    public BookDto updateBook(@PathVariable Long id,
                                               @RequestBody @Valid UpdateBookRequestDto bookDto) {
         BookDto updatedBook = bookService.updateBook(id, bookDto);
-        return ResponseEntity.ok(updatedBook);
+        return bookService.updateBook(id, bookDto);
     }
 
     @GetMapping("/search")
