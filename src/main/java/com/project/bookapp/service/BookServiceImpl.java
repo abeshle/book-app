@@ -10,7 +10,6 @@ import com.project.bookapp.model.Book;
 import com.project.bookapp.repository.book.BookRepository;
 import com.project.bookapp.repository.book.BookSpecificationBuilder;
 import java.util.List;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -51,13 +50,7 @@ public class BookServiceImpl implements BookService {
                 .orElseThrow(() ->
                         new EntityNotFoundException("Entity with id " + id + " not found"));
 
-        Optional.ofNullable(bookDto.getTitle()).ifPresent(book::setTitle);
-        Optional.ofNullable(bookDto.getAuthor()).ifPresent(book::setAuthor);
-        Optional.ofNullable(bookDto.getIsbn()).ifPresent(book::setIsbn);
-        Optional.ofNullable(bookDto.getPrice()).ifPresent(book::setPrice);
-        Optional.ofNullable(bookDto.getDescription()).ifPresent(book::setDescription);
-        Optional.ofNullable(bookDto.getCoverImage()).ifPresent(book::setCoverImage);
-
+        bookMapper.updateBookFromDto(bookDto, book);
         bookRepository.save(book);
         return bookMapper.toDto(book);
     }
