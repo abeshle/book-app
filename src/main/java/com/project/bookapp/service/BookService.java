@@ -5,11 +5,12 @@ import com.project.bookapp.dto.BookSearchParametersDto;
 import com.project.bookapp.dto.CreateBookRequestDto;
 import com.project.bookapp.dto.UpdateBookRequestDto;
 import java.util.List;
+import org.springframework.data.domain.Pageable;
 
 public interface BookService {
     BookDto save(CreateBookRequestDto book);
 
-    List<BookDto> findAll();
+    List<BookDto> findAll(Pageable pageable);
 
     BookDto getById(Long id);
 
@@ -17,5 +18,5 @@ public interface BookService {
 
     BookDto updateBook(Long id, UpdateBookRequestDto bookDto);
 
-    List<BookDto> search(BookSearchParametersDto params);
+    List<BookDto> search(BookSearchParametersDto params, Pageable pageable);
 }
