@@ -3,6 +3,7 @@ package com.project.bookapp.validation;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import java.lang.reflect.Field;
+import java.util.Objects;
 
 public class FieldMatchValidator implements ConstraintValidator<FieldMatch,Object> {
     private String firstFieldName;
@@ -26,7 +27,7 @@ public class FieldMatchValidator implements ConstraintValidator<FieldMatch,Objec
             Object firstValue = firstField.get(o);
             Object secondValue = secondField.get(o);
 
-            return firstValue != null && firstValue.equals(secondValue);
+            return Objects.equals(firstValue, secondValue);
         } catch (Exception e) {
             return false;
         }

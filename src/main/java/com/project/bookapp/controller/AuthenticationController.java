@@ -3,6 +3,8 @@ package com.project.bookapp.controller;
 import com.project.bookapp.dto.user.UserRegistrationRequestDto;
 import com.project.bookapp.dto.user.UserResponseDto;
 import com.project.bookapp.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -10,12 +12,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Tag(name = "Users authentication", description = "Endpoints for users authentication")
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/auth")
 public class AuthenticationController {
     private final UserService userService;
 
+    @Operation(summary = "User registration", description = "Register new user")
     @PostMapping("/registration")
     public UserResponseDto register(@Valid @RequestBody UserRegistrationRequestDto request) {
         return userService.register(request);
