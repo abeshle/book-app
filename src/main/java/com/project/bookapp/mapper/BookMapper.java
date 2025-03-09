@@ -1,9 +1,9 @@
 package com.project.bookapp.mapper;
 
 import com.project.bookapp.config.MapperConfig;
-import com.project.bookapp.dto.BookDto;
-import com.project.bookapp.dto.CreateBookRequestDto;
-import com.project.bookapp.dto.UpdateBookRequestDto;
+import com.project.bookapp.dto.book.BookDto;
+import com.project.bookapp.dto.book.CreateBookRequestDto;
+import com.project.bookapp.dto.book.UpdateBookRequestDto;
 import com.project.bookapp.model.Book;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;

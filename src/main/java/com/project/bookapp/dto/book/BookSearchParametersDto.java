@@ -1,4 +1,4 @@
-package com.project.bookapp.dto;
+package com.project.bookapp.dto.book;
 
 public record BookSearchParametersDto(String title, String author, String isbn) {
     public static final String AUTHOR = "author";

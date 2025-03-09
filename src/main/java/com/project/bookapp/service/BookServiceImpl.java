@@ -1,9 +1,9 @@
 package com.project.bookapp.service;
 
-import com.project.bookapp.dto.BookDto;
-import com.project.bookapp.dto.BookSearchParametersDto;
-import com.project.bookapp.dto.CreateBookRequestDto;
-import com.project.bookapp.dto.UpdateBookRequestDto;
+import com.project.bookapp.dto.book.BookDto;
+import com.project.bookapp.dto.book.BookSearchParametersDto;
+import com.project.bookapp.dto.book.CreateBookRequestDto;
+import com.project.bookapp.dto.book.UpdateBookRequestDto;
 import com.project.bookapp.exceptions.EntityNotFoundException;
 import com.project.bookapp.mapper.BookMapper;
 import com.project.bookapp.model.Book;
