@@ -2,8 +2,8 @@ package com.project.bookapp.service;
 
 import com.project.bookapp.dto.user.UserRegistrationRequestDto;
 import com.project.bookapp.dto.user.UserResponseDto;
+import com.project.bookapp.exceptions.EntityNotFoundException;
 import com.project.bookapp.exceptions.RegistrationException;
-import com.project.bookapp.exceptions.RoleNotFoundException;
 import com.project.bookapp.mapper.UserMapper;
 import com.project.bookapp.model.Role;
 import com.project.bookapp.model.RoleName;
@@ -31,7 +31,7 @@ public class UserServiceImpl implements UserService {
             throw new RegistrationException("Can't register user");
         }
         Role roleUser = roleRepository.findByName(RoleName.ROLE_USER)
-                .orElseThrow(() -> new RoleNotFoundException("Role ROLE_USER not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Role ROLE_USER not found"));
         User user = userMapper.toModel(requestDto);
         user.setPassword(passwordEncoder.encode(requestDto.getPassword()));
         user.setRoles(Set.of(roleUser));

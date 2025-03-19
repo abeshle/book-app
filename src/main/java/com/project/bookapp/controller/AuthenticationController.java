@@ -1,7 +1,10 @@
 package com.project.bookapp.controller;
 
+import com.project.bookapp.dto.user.UserLoginRequestDto;
+import com.project.bookapp.dto.user.UserLoginResponseDto;
 import com.project.bookapp.dto.user.UserRegistrationRequestDto;
 import com.project.bookapp.dto.user.UserResponseDto;
+import com.project.bookapp.security.AuthenticationService;
 import com.project.bookapp.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -18,10 +21,16 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/auth")
 public class AuthenticationController {
     private final UserService userService;
+    private final AuthenticationService authenticationService;
 
     @Operation(summary = "User registration", description = "Register new user")
     @PostMapping("/registration")
     public UserResponseDto register(@Valid @RequestBody UserRegistrationRequestDto request) {
         return userService.register(request);
+    }
+
+    @PostMapping("/login")
+    public UserLoginResponseDto login(@RequestBody UserLoginRequestDto request) {
+        return authenticationService.authenticate(request);
     }
 }

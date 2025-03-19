@@ -33,41 +33,26 @@ public class CustomGlobalExceptionHandler extends ResponseEntityExceptionHandler
         return new ResponseEntity<>(body, headers, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<Object> handleEntityNotFound(EntityNotFoundException ex,
-                                                       WebRequest request) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("Timestamp", LocalDateTime.now());
-        body.put("message", ex.getMessage());
+    private ResponseEntity<Object> createResponse(String message, HttpStatus status) {
+        Map<String, Object> errorResponse = new LinkedHashMap<>();
+        errorResponse.put("timestamp", LocalDateTime.now());
+        errorResponse.put("message", message);
+        return new ResponseEntity<>(errorResponse, status);
+    }
 
-        return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<Object> handleEntityNotFound(EntityNotFoundException ex) {
+        return createResponse(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(RegistrationException.class)
-    public ResponseEntity<Map<String, Object>>
+    public ResponseEntity<Object>
             handleRegistrationException(RegistrationException ex) {
-        Map<String, Object> errorResponse = new LinkedHashMap<>();
-        errorResponse.put("timestamp", LocalDateTime.now());
-        errorResponse.put("message", ex.getMessage());
-
-        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+        return createResponse(ex.getMessage(), HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Object> handleGeneralException(Exception ex, WebRequest request) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("Timestamp", LocalDateTime.now());
-        body.put("message", ex.getMessage());
-
-        return new ResponseEntity<>(body, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-
-    @ExceptionHandler(RoleNotFoundException.class)
-    public ResponseEntity<Object> handleRoleNotFoundException(RoleNotFoundException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("Timestamp", LocalDateTime.now());
-        body.put("message", ex.getMessage());
-
-        return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }
