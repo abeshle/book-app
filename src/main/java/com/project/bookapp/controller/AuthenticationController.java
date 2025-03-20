@@ -29,8 +29,9 @@ public class AuthenticationController {
         return userService.register(request);
     }
 
+    @Operation(summary = "User login", description = "User login")
     @PostMapping("/login")
-    public UserLoginResponseDto login(@RequestBody UserLoginRequestDto request) {
+    public UserLoginResponseDto login(@Valid @RequestBody UserLoginRequestDto request) {
         return authenticationService.authenticate(request);
     }
 }
