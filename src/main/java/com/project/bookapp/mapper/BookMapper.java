@@ -2,9 +2,14 @@ package com.project.bookapp.mapper;
 
 import com.project.bookapp.config.MapperConfig;
 import com.project.bookapp.dto.book.BookDto;
+import com.project.bookapp.dto.book.BookDtoWithoutCategoryIds;
 import com.project.bookapp.dto.book.CreateBookRequestDto;
 import com.project.bookapp.dto.book.UpdateBookRequestDto;
 import com.project.bookapp.model.Book;
+import com.project.bookapp.model.Category;
+import java.util.List;
+import java.util.stream.Collectors;
+import org.mapstruct.AfterMapping;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
@@ -18,4 +23,17 @@ public interface BookMapper {
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateBookFromDto(UpdateBookRequestDto dto, @MappingTarget Book entity);
+
+    BookDtoWithoutCategoryIds toDtoWithoutCategories(Book book);
+
+    @AfterMapping
+    default void setCategoryIds(@MappingTarget BookDto bookDto, Book book) {
+        if (book.getCategories() != null) {
+            List<Long> categoryIds = book.getCategories()
+                    .stream()
+                    .map(Category::getId)
+                    .collect(Collectors.toList());
+            bookDto.setCategoryIds(categoryIds);
+        }
+    }
 }

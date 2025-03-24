@@ -1,6 +1,7 @@
 package com.project.bookapp.controller;
 
 import com.project.bookapp.dto.book.BookDto;
+import com.project.bookapp.dto.book.BookDtoWithoutCategoryIds;
 import com.project.bookapp.dto.book.BookSearchParametersDto;
 import com.project.bookapp.dto.book.CreateBookRequestDto;
 import com.project.bookapp.dto.book.UpdateBookRequestDto;
@@ -43,7 +44,8 @@ public class BookController {
     @PreAuthorize("hasRole('USER')")
     @GetMapping("/{id}")
     @Operation(summary = "Get book by id", description = "Get book by certain id")
-    public BookDto getBookById(@PathVariable Long id) {
+    public BookDtoWithoutCategoryIds getBookById(@PathVariable Long id) {
+
         return bookService.getById(id);
     }
 

@@ -1,6 +1,7 @@
 package com.project.bookapp.service;
 
 import com.project.bookapp.dto.book.BookDto;
+import com.project.bookapp.dto.book.BookDtoWithoutCategoryIds;
 import com.project.bookapp.dto.book.BookSearchParametersDto;
 import com.project.bookapp.dto.book.CreateBookRequestDto;
 import com.project.bookapp.dto.book.UpdateBookRequestDto;
@@ -9,6 +10,7 @@ import com.project.bookapp.mapper.BookMapper;
 import com.project.bookapp.model.Book;
 import com.project.bookapp.repository.book.BookRepository;
 import com.project.bookapp.repository.book.BookSpecificationBuilder;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -34,8 +36,8 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    public BookDto getById(Long id) {
-        return bookMapper.toDto(bookRepository.findById(id).orElseThrow(() ->
+    public BookDtoWithoutCategoryIds getById(Long id) {
+        return bookMapper.toDtoWithoutCategories(bookRepository.findById(id).orElseThrow(() ->
                 new EntityNotFoundException("Entity with id " + id + " not found")));
     }
 
@@ -60,5 +62,10 @@ public class BookServiceImpl implements BookService {
         Specification<Book> bookSpecification = bookSpecificationBuilder.build(params);
         return bookRepository.findAll(bookSpecification, pageable)
                 .map(bookMapper::toDto);
+    }
+
+    @Override
+    public List<Book> getBooksByCategoryId(Long categoryId) {
+        return bookRepository.findAllByCategoryId(categoryId);
     }
 }
