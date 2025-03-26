@@ -5,7 +5,6 @@ import com.project.bookapp.dto.book.BookDtoWithoutCategoryIds;
 import com.project.bookapp.dto.book.BookSearchParametersDto;
 import com.project.bookapp.dto.book.CreateBookRequestDto;
 import com.project.bookapp.dto.book.UpdateBookRequestDto;
-import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -22,5 +21,5 @@ public interface BookService {
 
     Page<BookDto> search(BookSearchParametersDto params, Pageable pageable);
 
-    List<BookDtoWithoutCategoryIds> getBooksByCategoryId(Pageable pageable, Long id);
+    Page<BookDtoWithoutCategoryIds> getBooksByCategoryId(Pageable pageable, Long id);
 }
