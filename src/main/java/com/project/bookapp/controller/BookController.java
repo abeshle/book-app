@@ -9,6 +9,7 @@ import com.project.bookapp.service.BookService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -44,9 +45,9 @@ public class BookController {
     @PreAuthorize("hasRole('USER')")
     @GetMapping("/{id}")
     @Operation(summary = "Get book by id", description = "Get book by certain id")
-    public BookDtoWithoutCategoryIds getBookById(@PathVariable Long id) {
+    public List<BookDtoWithoutCategoryIds> getBookById(Pageable pageable,@PathVariable Long id) {
 
-        return bookService.getById(id);
+        return bookService.getBooksByCategoryId(pageable,id);
     }
 
     @PreAuthorize("hasRole('ADMIN')")

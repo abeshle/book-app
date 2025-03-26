@@ -8,10 +8,10 @@ import com.project.bookapp.dto.book.UpdateBookRequestDto;
 import com.project.bookapp.model.Book;
 import com.project.bookapp.model.Category;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.mapstruct.AfterMapping;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
@@ -24,6 +24,7 @@ public interface BookMapper {
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateBookFromDto(UpdateBookRequestDto dto, @MappingTarget Book entity);
 
+    @Mapping(target = "id", ignore = true)
     BookDtoWithoutCategoryIds toDtoWithoutCategories(Book book);
 
     @AfterMapping
@@ -32,7 +33,7 @@ public interface BookMapper {
             List<Long> categoryIds = book.getCategories()
                     .stream()
                     .map(Category::getId)
-                    .collect(Collectors.toList());
+                    .toList();
             bookDto.setCategoryIds(categoryIds);
         }
     }

@@ -1,19 +1,20 @@
 package com.project.bookapp.service;
 
-import com.project.bookapp.dto.category.CategoryDto;
+import com.project.bookapp.dto.category.CategoryRequestDto;
+import com.project.bookapp.dto.category.CategoryResponseDto;
 import java.util.List;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
 public interface CategoryService {
-    List<CategoryDto> findAll();
+    List<CategoryResponseDto> findAll(Pageable pageable);
 
-    CategoryDto getById(Long id);
+    CategoryResponseDto getById(Long id);
 
-    CategoryDto save(CategoryDto categoryDto);
+    CategoryResponseDto save(CategoryRequestDto categoryDto);
 
-    CategoryDto update(Long id, CategoryDto categoryDto);
+    CategoryResponseDto update(Long id, CategoryRequestDto categoryDto);
 
     void deleteById(Long id);
-
 }
