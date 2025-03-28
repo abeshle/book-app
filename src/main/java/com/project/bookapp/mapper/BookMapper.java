@@ -5,14 +5,17 @@ import com.project.bookapp.dto.book.BookDto;
 import com.project.bookapp.dto.book.BookDtoWithoutCategoryIds;
 import com.project.bookapp.dto.book.CreateBookRequestDto;
 import com.project.bookapp.dto.book.UpdateBookRequestDto;
+import com.project.bookapp.exceptions.EntityNotFoundException;
 import com.project.bookapp.model.Book;
 import com.project.bookapp.model.Category;
+import com.project.bookapp.repository.book.BookRepository;
 import java.util.List;
 import org.mapstruct.AfterMapping;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.Named;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper(config = MapperConfig.class)
@@ -36,5 +39,12 @@ public interface BookMapper {
                     .toList();
             bookDto.setCategoryIds(categoryIds);
         }
+    }
+
+    @Named("bookFromId")
+    default Book bookFromId(Long id, BookRepository bookRepository) {
+        return bookRepository.findById(id)
+                .orElseThrow(() ->
+                        new EntityNotFoundException("Entity with id " + id + " not found"));
     }
 }
