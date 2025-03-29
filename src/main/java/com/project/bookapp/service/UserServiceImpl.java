@@ -13,8 +13,6 @@ import com.project.bookapp.repository.user.UserRepository;
 import jakarta.transaction.Transactional;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -38,13 +36,5 @@ public class UserServiceImpl implements UserService {
         user.setPassword(passwordEncoder.encode(requestDto.getPassword()));
         user.setRoles(Set.of(roleUser));
         return userMapper.toDto(userRepository.save(user));
-    }
-
-    @Override
-    public User getUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return userRepository.findByEmail(authentication.getName()).orElseThrow(
-                () -> new EntityNotFoundException("Can't find user by username: "
-                        + authentication.getName()));
     }
 }
