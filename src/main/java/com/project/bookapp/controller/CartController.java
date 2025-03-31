@@ -47,7 +47,7 @@ public class CartController {
             Authentication authentication,
             @RequestBody @Valid CartItemRequestDto cartItemRequestDto) {
         User user = (User) authentication.getPrincipal();
-        return shoppingCartService.save(user.getId(), cartItemRequestDto);
+        return shoppingCartService.save(user, cartItemRequestDto);
     }
 
     @PreAuthorize("hasRole('USER')")

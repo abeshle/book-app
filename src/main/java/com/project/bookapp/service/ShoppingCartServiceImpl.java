@@ -12,7 +12,6 @@ import com.project.bookapp.model.User;
 import com.project.bookapp.repository.book.BookRepository;
 import com.project.bookapp.repository.cart.ShoppingCartRepository;
 import com.project.bookapp.repository.item.CartItemRepository;
-import com.project.bookapp.repository.user.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,16 +23,14 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
 
     private final ShoppingCartRepository shoppingCartRepository;
     private final ShoppingCartMapper shoppingCartMapper;
-    private final UserService userService;
     private final BookRepository bookRepository;
     private final CartItemMapper cartItemMapper;
     private final CartItemRepository cartItemRepository;
-    private final UserRepository userRepository;
 
     @Override
-    public ShoppingCartResponseDto save(Long id, CartItemRequestDto cartItemRequestDto) {
-        ShoppingCart shoppingCart = shoppingCartRepository.findById(id)
-                .orElseGet(() -> createNewShoppingCart(id));
+    public ShoppingCartResponseDto save(User user, CartItemRequestDto cartItemRequestDto) {
+        ShoppingCart shoppingCart = shoppingCartRepository.findByUserId(user.getId())
+                .orElseGet(() -> createNewShoppingCart(user));
 
         Book book = bookRepository.findById(cartItemRequestDto.getBookId())
                 .orElseThrow(() ->
@@ -52,8 +49,8 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
 
         cartItem.setQuantity(cartItem.getQuantity() + cartItemRequestDto.getQuantity());
 
-        CartItem savedCartItem = cartItemRepository.save(cartItem);
-        shoppingCart.addCartItem(savedCartItem);
+        cartItemRepository.save(cartItem);
+        shoppingCart.addCartItem(cartItem);
 
         shoppingCartRepository.save(shoppingCart);
 
@@ -68,10 +65,8 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         return shoppingCartMapper.toDto(shoppingCart);
     }
 
-    public ShoppingCart createNewShoppingCart(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(()
-                        -> new EntityNotFoundException("User with id " + userId + " not found"));
+    @Override
+    public ShoppingCart createNewShoppingCart(User user) {
         ShoppingCart newCart = new ShoppingCart();
         newCart.setUser(user);
         return shoppingCartRepository.save(newCart);
@@ -81,24 +76,20 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     public ShoppingCartResponseDto update(
             Long cartItemId,
             CartItemRequestDto cartItemRequestDto,
-            Long id) {
-        CartItem cartItem = cartItemRepository.findByIdAndShoppingCartId(cartItemId, id)
-                .orElseThrow(() -> new EntityNotFoundException(
-                        "Cart item not found with ID: " + cartItemId
-                                + " for shopping cart ID: " + id));
-
-        if (cartItemRequestDto.getBookId() != null
-                && !cartItem.getBook().getId().equals(cartItemRequestDto.getBookId())) {
-            Book book = bookRepository.findById(cartItemRequestDto.getBookId())
-                    .orElseThrow(() -> new EntityNotFoundException(
-                            "Book not found with ID: " + cartItemRequestDto.getBookId()));
-            cartItem.setBook(book);
-        }
+            Long userId) {
+        ShoppingCart cart = shoppingCartRepository.findByUserId(userId)
+                .orElseThrow(() ->
+                        new EntityNotFoundException(
+                                "Shopping cart not found for user with id " + userId));
+        CartItem cartItem = cartItemRepository.findByIdAndShoppingCartId(cartItemId, cart.getId())
+                .orElseThrow(() ->
+                        new EntityNotFoundException("Cart item with id "
+                                + cartItemId + " not found in shopping cart " + cart.getId()));
 
         cartItem.setQuantity(cartItemRequestDto.getQuantity());
         cartItemRepository.save(cartItem);
 
-        return shoppingCartMapper.toDto(cartItem.getShoppingCart());
+        return shoppingCartMapper.toDto(cart);
     }
 
     @Override
