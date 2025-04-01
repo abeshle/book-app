@@ -11,6 +11,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -34,9 +36,9 @@ public class OrderController {
     @GetMapping
     @Operation(summary = "Get a user's order history",
             description = "Retrieve the list of orders placed by a user")
-    public List<OrderResponseDto> getUserOrders(Authentication authentication) {
+    public Page<OrderResponseDto> getUserOrders(Authentication authentication, Pageable pageable) {
         User user = (User) authentication.getPrincipal();
-        return orderService.findAll(user);
+        return orderService.findAll(user,pageable);
     }
 
     @PreAuthorize("hasRole('USER')")
@@ -70,7 +72,7 @@ public class OrderController {
         return orderService.getOrderItems(orderId);
     }
 
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{orderId}")
     @Operation(summary = "Update order status",
             description = "Update the status of a specific order")
@@ -78,5 +80,15 @@ public class OrderController {
             @PathVariable Long orderId,
             @RequestBody @Valid UpdateOrderStatusRequestDto updateOrderStatusRequestDto) {
         return orderService.updateStatus(orderId, updateOrderStatusRequestDto);
+    }
+
+    @PreAuthorize("hasRole('USER')")
+    @GetMapping("/{orderId}/items/{itemId}")
+    @Operation(summary = "Get a specific order item",
+            description = "Retrieve a specific OrderItem within an order")
+    public OrderItemResponseDto getOrderItem(
+            @PathVariable Long orderId,
+            @PathVariable Long itemId) {
+        return orderService.getOrderItem(orderId, itemId);
     }
 }

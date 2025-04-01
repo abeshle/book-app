@@ -1,10 +1,10 @@
 package com.project.bookapp.dto.order;
 
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
 public class OrderRequestDto {
-    @NotNull
+    @NotBlank
     private String shippingAddress;
 }

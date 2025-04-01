@@ -16,14 +16,18 @@ import com.project.bookapp.model.User;
 import com.project.bookapp.repository.cart.ShoppingCartRepository;
 import com.project.bookapp.repository.order.OrderRepository;
 import com.project.bookapp.repository.user.UserRepository;
+import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
 
@@ -46,31 +50,11 @@ public class OrderServiceImpl implements OrderService {
             throw new DataProcessingException("Cannot place an order with an empty cart");
         }
 
-        Order order = new Order();
-        order.setUser(existingUser);
-        order.setStatus(Status.PENDING);
-        order.setOrderDate(LocalDateTime.now());
-
-        BigDecimal total = shoppingCart.getCartItems().stream()
-                .map(cartItem -> cartItem.getBook().getPrice()
-                        .multiply(BigDecimal.valueOf(cartItem.getQuantity())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        order.setTotal(total);
-
-        List<OrderItem> orderItems = shoppingCart.getCartItems().stream()
-                .map(cartItem -> {
-                    OrderItem orderItem = new OrderItem();
-                    orderItem.setBook(cartItem.getBook());
-                    orderItem.setQuantity(cartItem.getQuantity());
-                    orderItem.setPrice(cartItem.getBook().getPrice()
-                            .multiply(BigDecimal.valueOf(cartItem.getQuantity())));
-                    orderItem.setOrder(order);
-                    return orderItem;
-                })
-                .toList();
+        Order order = createOrder(existingUser, orderRequestDto);
+        order.setTotal(calculateTotal(shoppingCart));
+        List<OrderItem> orderItems = createOrderItems(order, shoppingCart);
 
         order.setOrderItems(new HashSet<>(orderItems));
-
         orderRepository.save(order);
 
         return orderMapper.toDto(order);
@@ -105,10 +89,53 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public List<OrderResponseDto> findAll(User user) {
-        List<Order> orders = orderRepository.findByUser(user);
-        return orders.stream()
-                .map(orderMapper::toDto)
+    public Page<OrderResponseDto> findAll(User user, Pageable pageable) {
+        Page<Order> orders = orderRepository.findByUser(user, pageable);
+        return orders.map(orderMapper::toDto);
+    }
+
+    @Override
+    public OrderItemResponseDto getOrderItem(Long orderId, Long itemId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() ->
+                        new EntityNotFoundException("Order not found with ID: " + orderId));
+
+        OrderItem orderItem = order.getOrderItems().stream()
+                .filter(item -> item.getId().equals(itemId))
+                .findFirst()
+                .orElseThrow(() ->
+                        new EntityNotFoundException("OrderItem not found with ID: " + itemId));
+
+        return orderItemMapper.toDto(orderItem);
+    }
+
+    private Order createOrder(User user, OrderRequestDto orderRequestDto) {
+        Order order = new Order();
+        order.setUser(user);
+        order.setStatus(Status.PENDING);
+        order.setOrderDate(LocalDateTime.now());
+        order.setShippingAddress(orderRequestDto.getShippingAddress());
+        return order;
+    }
+
+    private BigDecimal calculateTotal(ShoppingCart shoppingCart) {
+        return shoppingCart.getCartItems().stream()
+                .map(cartItem -> cartItem.getBook().getPrice()
+                        .multiply(BigDecimal.valueOf(cartItem.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private List<OrderItem> createOrderItems(Order order, ShoppingCart shoppingCart) {
+        return shoppingCart.getCartItems().stream()
+                .map(cartItem -> {
+                    OrderItem orderItem = new OrderItem();
+                    orderItem.setBook(cartItem.getBook());
+                    orderItem.setQuantity(cartItem.getQuantity());
+                    orderItem.setPrice(cartItem.getBook().getPrice()
+                            .multiply(BigDecimal.valueOf(cartItem.getQuantity())));
+                    orderItem.setOrder(order);
+                    return orderItem;
+                })
                 .toList();
     }
 }
