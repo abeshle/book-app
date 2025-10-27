@@ -1,0 +1,3 @@
+cDELETE FROM books_categories WHERE book_id IN (SELECT id FROM books WHERE isbn = '978-0987654321');
+DELETE FROM books WHERE isbn = '978-0987654321';
+ALTER TABLE categories AUTO_INCREMENT = 1;
