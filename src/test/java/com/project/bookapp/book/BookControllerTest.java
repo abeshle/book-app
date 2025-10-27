@@ -30,7 +30,6 @@ import java.util.List;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -43,8 +42,8 @@ class BookControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @BeforeEach
-    void beforeEach(
+    @BeforeAll
+    static void beforeAll(
             @Autowired DataSource dataSource,
             @Autowired WebApplicationContext applicationContext
     ) throws SQLException {
@@ -53,19 +52,6 @@ class BookControllerTest {
                 .apply(springSecurity())
                 .build();
         teardown(dataSource);
-        try (Connection connection = dataSource.getConnection()) {
-            connection.setAutoCommit(true);
-            ScriptUtils.executeSqlScript(
-                    connection,
-                    new ClassPathResource(
-                            "database/remove-all-books.sql"
-                    )
-            );
-            ScriptUtils.executeSqlScript(
-                    connection,
-                    new ClassPathResource("database/add-three-books.sql")
-            );
-        }
     }
 
     @AfterAll
@@ -87,14 +73,12 @@ class BookControllerTest {
     @Test
     @DisplayName("Create a new Book")
     @WithMockUser(username = "admin", roles = {"ADMIN"})
-    @Sql(scripts = "classpath:database/add-categories.sql",
+    @Sql(scripts = {"classpath:database/add-categories.sql",
+            "classpath:database/add-three-books.sql"},
             executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(
-            scripts = {"classpath:database/remove-test-book-from-table.sql",
-                    "classpath:database/remove-all-categories.sql"
-            },
-            executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD
-    )
+    @Sql(scripts = {"classpath:database/remove-all-books.sql",
+            "classpath:database/remove-all-categories.sql"},
+            executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     void createBook_ValidRequestDto_Success() throws Exception {
         CreateBookRequestDto requestDto = getTestBookDto();
         BookDto expected = getBookDto(requestDto);
@@ -118,14 +102,12 @@ class BookControllerTest {
     @Test
     @DisplayName("Get all books")
     @WithMockUser(username = "user", roles = {"USER"})
-    @Sql(scripts = "classpath:database/add-categories.sql",
+    @Sql(scripts = {"classpath:database/add-categories.sql",
+            "classpath:database/add-three-books.sql"},
             executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(
-            scripts = {"classpath:database/remove-all-books.sql",
-                    "classpath:database/remove-all-categories.sql"
-            },
-            executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD
-    )
+    @Sql(scripts = {"classpath:database/remove-all-books.sql",
+            "classpath:database/remove-all-categories.sql"},
+            executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     void getAll_GivenBooksInCatalog_ShouldReturnAllBooks() throws Exception {
         List<BookDto> expected = new ArrayList<>();
         expected.add(getTheFirstBook());
@@ -149,6 +131,12 @@ class BookControllerTest {
     @Test
     @DisplayName("Find book by id")
     @WithMockUser(username = "user", roles = {"USER"})
+    @Sql(scripts = {"classpath:database/add-categories.sql",
+            "classpath:database/add-three-books.sql"},
+            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+    @Sql(scripts = {"classpath:database/remove-all-books.sql",
+            "classpath:database/remove-all-categories.sql"},
+            executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     void findById_GivenExistingBookId_ShouldReturnBook() throws Exception {
         BookDto expected1 = getTheFirstBook();
         MvcResult mvcResult = mockMvc.perform(
@@ -181,6 +169,12 @@ class BookControllerTest {
     @Test
     @DisplayName("Delete book by id")
     @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @Sql(scripts = {"classpath:database/add-categories.sql",
+            "classpath:database/add-three-books.sql"},
+            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+    @Sql(scripts = {"classpath:database/remove-all-books.sql",
+            "classpath:database/remove-all-categories.sql"},
+            executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     void delete_DeleteExistedBook_Success() throws Exception {
         MvcResult mvcResult = mockMvc.perform(
                         delete("/books/1")
@@ -195,6 +189,12 @@ class BookControllerTest {
     @Test
     @DisplayName("Update book by id")
     @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @Sql(scripts = {"classpath:database/add-categories.sql",
+            "classpath:database/add-three-books.sql"},
+            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+    @Sql(scripts = {"classpath:database/remove-all-books.sql",
+            "classpath:database/remove-all-categories.sql"},
+            executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     void updateBook_UpdateExistedBook_Success() throws Exception {
         CreateBookRequestDto updateBookRequestDto = getUpdateBookRequestDto();
         BookDto expected = getBookDtoFromUpdatedBookRequestDto(updateBookRequestDto);

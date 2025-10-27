@@ -42,12 +42,14 @@ class CategoryControllerTest {
     protected static MockMvc mockMvc;
 
     @Autowired
+    private DataSource dataSource;
+    @Autowired
     private ObjectMapper objectMapper;
 
 
 
-    @BeforeEach
-    void beforeEach(
+    @BeforeAll
+    static void beforeAll(
             @Autowired DataSource dataSource,
             @Autowired WebApplicationContext applicationContext
     ) throws SQLException {
@@ -55,30 +57,28 @@ class CategoryControllerTest {
                 .webAppContextSetup(applicationContext)
                 .apply(springSecurity())
                 .build();
-        tearDown(dataSource);
+    }
+
+    @BeforeEach
+    void setupDatabase() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             connection.setAutoCommit(true);
-            ScriptUtils.executeSqlScript(
-                    connection,
-                    new ClassPathResource("database/add-categories.sql")
-            );
+
+            ScriptUtils.executeSqlScript(connection,
+                    new ClassPathResource("database/remove-all-categories.sql"));
+
+            ScriptUtils.executeSqlScript(connection,
+                    new ClassPathResource("database/add-categories.sql"));
         }
     }
 
+
     @AfterAll
-    static void afterAll(@Autowired DataSource dataSource) {
-        tearDown(dataSource);
-    }
-
-
-    @SneakyThrows
-    static void tearDown(DataSource dataSource) {
+    static void afterAll(@Autowired DataSource dataSource) throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             connection.setAutoCommit(true);
-            ScriptUtils.executeSqlScript(
-                    connection,
-                    new ClassPathResource("database/remove-all-categories.sql")
-            );
+            ScriptUtils.executeSqlScript(connection,
+                    new ClassPathResource("database/remove-all-categories.sql"));
         }
     }
 
