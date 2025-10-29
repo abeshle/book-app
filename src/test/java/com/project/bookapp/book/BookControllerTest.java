@@ -119,12 +119,6 @@ class BookControllerTest {
     @Test
     @DisplayName("Get all books")
     @WithMockUser(username = "user", roles = {"USER"})
-//    @Sql(scripts = {"classpath:database/add-categories.sql",
-//            "classpath:database/add-three-books.sql"},
-//            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-//    @Sql(scripts = {"classpath:database/remove-all-books.sql",
-//            "classpath:database/remove-all-categories.sql"},
-//            executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     void getAll_GivenBooksInCatalog_ShouldReturnAllBooks() throws Exception {
         List<BookDto> expected = new ArrayList<>();
         expected.add(getTheFirstBook());
@@ -148,12 +142,6 @@ class BookControllerTest {
     @Test
     @DisplayName("Find book by id")
     @WithMockUser(username = "user", roles = {"USER"})
-//    @Sql(scripts = {"classpath:database/add-categories.sql",
-//            "classpath:database/add-three-books.sql"},
-//            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-//    @Sql(scripts = {"classpath:database/remove-all-books.sql",
-//            "classpath:database/remove-all-categories.sql"},
-//            executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     void findById_GivenExistingBookId_ShouldReturnBook() throws Exception {
         BookDto expected1 = getTheFirstBook();
         MvcResult mvcResult = mockMvc.perform(
@@ -206,12 +194,6 @@ class BookControllerTest {
     @Test
     @DisplayName("Update book by id")
     @WithMockUser(username = "admin", roles = {"ADMIN"})
-//    @Sql(scripts = {"classpath:database/add-categories.sql",
-//            "classpath:database/add-three-books.sql"},
-//            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-//    @Sql(scripts = {"classpath:database/remove-all-books.sql",
-//            "classpath:database/remove-all-categories.sql"},
-//            executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     void updateBook_UpdateExistedBook_Success() throws Exception {
         CreateBookRequestDto updateBookRequestDto = getUpdateBookRequestDto();
         BookDto expected = getBookDtoFromUpdatedBookRequestDto(updateBookRequestDto);
