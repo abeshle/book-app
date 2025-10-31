@@ -23,6 +23,12 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+
 @ExtendWith(MockitoExtension.class)
 public class CategoryServiceTest {
 
@@ -67,9 +73,13 @@ public class CategoryServiceTest {
 
         Page<CategoryResponseDto> result = categoryService.findAll(pageable);
 
-        Assertions.assertEquals(2, result.getTotalElements());
-        Assertions.assertEquals(dto1, result.getContent().get(0));
-        Assertions.assertEquals(dto2, result.getContent().get(1));
+        assertEquals(2, result.getTotalElements());
+        assertEquals(dto1, result.getContent().get(0));
+        assertEquals(dto2, result.getContent().get(1));
+
+        verify(categoryRepository).findAll(pageable);
+        verify(categoryMapper).toDto(category1);
+        verify(categoryMapper).toDto(category2);
     }
 
     @Test
@@ -91,7 +101,10 @@ public class CategoryServiceTest {
 
         CategoryResponseDto result = categoryService.getById(id);
 
-        Assertions.assertEquals(dto, result);
+        assertEquals(dto, result);
+
+        verify(categoryRepository).findById(id);
+        verify(categoryMapper).toDto(category);
     }
 
     @Test
@@ -100,7 +113,10 @@ public class CategoryServiceTest {
         Long id = 1L;
         Mockito.when(categoryRepository.findById(id)).thenReturn(Optional.empty());
 
-        Assertions.assertThrows(EntityNotFoundException.class, () -> categoryService.getById(id));
+        assertThrows(EntityNotFoundException.class, () -> categoryService.getById(id));
+
+        verify(categoryRepository).findById(id);
+        verify(categoryMapper, never()).toDto(any());
     }
 
     @Test
@@ -126,7 +142,11 @@ public class CategoryServiceTest {
 
         CategoryResponseDto result = categoryService.save(requestDto);
 
-        Assertions.assertEquals(responseDto, result);
+        assertEquals(responseDto, result);
+
+        verify(categoryMapper).toEntity(requestDto);
+        verify(categoryRepository).save(category);
+        verify(categoryMapper).toDto(savedCategory);
     }
 
     @Test
@@ -162,7 +182,12 @@ public class CategoryServiceTest {
 
         CategoryResponseDto result = categoryService.update(id, requestDto);
 
-        Assertions.assertEquals("Updated Name", result.getName());
+        assertEquals("Updated Name", result.getName());
+
+        verify(categoryRepository).findById(id);
+        verify(categoryMapper).updateBookFromDto(requestDto, existingCategory);
+        verify(categoryRepository).save(existingCategory);
+        verify(categoryMapper).toDto(existingCategory);
     }
 
     @Test
@@ -173,5 +198,7 @@ public class CategoryServiceTest {
         Mockito.doNothing().when(categoryRepository).deleteById(id);
 
         categoryService.deleteById(id);
+
+        verify(categoryRepository).deleteById(id);
     }
 }

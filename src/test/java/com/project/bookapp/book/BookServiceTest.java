@@ -27,6 +27,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.verify;
+
 @ExtendWith(MockitoExtension.class)
 public class BookServiceTest {
 
@@ -64,8 +67,12 @@ public class BookServiceTest {
         Mockito.when(bookMapper.toDto(savedBook)).thenReturn(expectedDto);
 
         BookDto result = bookService.save(requestDto);
-        Assertions.assertEquals(expectedDto.getId(), result.getId());
-        Assertions.assertEquals(expectedDto.getTitle(), result.getTitle());
+        assertEquals(expectedDto.getId(), result.getId());
+        assertEquals(expectedDto.getTitle(), result.getTitle());
+
+        verify(bookMapper).toModel(requestDto);
+        verify(bookRepository).save(book);
+        verify(bookMapper).toDto(savedBook);
     }
 
     @Test
@@ -98,9 +105,13 @@ public class BookServiceTest {
 
         Page<BookDto> result = bookService.findAll(pageable);
 
-        Assertions.assertEquals(2, result.getTotalElements());
-        Assertions.assertEquals(dto1, result.getContent().get(0));
-        Assertions.assertEquals(dto2, result.getContent().get(1));
+        assertEquals(2, result.getTotalElements());
+        assertEquals(dto1, result.getContent().get(0));
+        assertEquals(dto2, result.getContent().get(1));
+
+        verify(bookRepository).findAll(pageable);
+        verify(bookMapper).toDto(book1);
+        verify(bookMapper).toDto(book2);
     }
 
     @Test
@@ -122,9 +133,12 @@ public class BookServiceTest {
 
         BookDto actualDto = bookService.getById(bookId);
 
-        Assertions.assertEquals(expectedDto.getId(), actualDto.getId());
-        Assertions.assertEquals(expectedDto.getTitle(), actualDto.getTitle());
-        Assertions.assertEquals(expectedDto.getPrice(), actualDto.getPrice());
+        assertEquals(expectedDto.getId(), actualDto.getId());
+        assertEquals(expectedDto.getTitle(), actualDto.getTitle());
+        assertEquals(expectedDto.getPrice(), actualDto.getPrice());
+
+        verify(bookRepository).findById(bookId);
+        verify(bookMapper).toDto(book);
     }
 
     @Test
@@ -142,7 +156,8 @@ public class BookServiceTest {
         String expected = "Entity with id " + bookId + " not found";
         String actual = exception.getMessage();
 
-        Assertions.assertEquals(expected, actual);
+        assertEquals(expected, actual);
+        verify(bookRepository).findById(bookId);
     }
 
     @Test
@@ -153,6 +168,8 @@ public class BookServiceTest {
         Mockito.doNothing().when(bookRepository).deleteById(bookId);
 
         bookService.deleteById(bookId);
+
+        verify(bookRepository).deleteById(bookId);
     }
 
     @Test
@@ -191,7 +208,12 @@ public class BookServiceTest {
 
         BookDto result = bookService.updateBook(bookId, updateDto);
 
-        Assertions.assertEquals(expectedDto, result);
+        assertEquals(expectedDto, result);
+
+        verify(bookRepository).findById(bookId);
+        verify(bookMapper).updateBookFromDto(updateDto, existingBook);
+        verify(bookRepository).save(Mockito.any(Book.class));
+        verify(bookMapper).toDto(Mockito.any(Book.class));
     }
 
     @Test
@@ -229,10 +251,14 @@ public class BookServiceTest {
 
         Page<BookDto> result = bookService.search(searchParams, pageable);
 
-        Assertions.assertEquals(1, result.getTotalElements());
-        Assertions.assertEquals("Some Book", result.getContent().get(0).getTitle());
-        Assertions.assertEquals("John Doe", result.getContent().get(0).getAuthor());
-        Assertions.assertEquals("123456789", result.getContent().get(0).getIsbn());
+        assertEquals(1, result.getTotalElements());
+        assertEquals("Some Book", result.getContent().get(0).getTitle());
+        assertEquals("John Doe", result.getContent().get(0).getAuthor());
+        assertEquals("123456789", result.getContent().get(0).getIsbn());
+
+        verify(bookSpecificationBuilder).build(searchParams);
+        verify(bookRepository).findAll(Mockito.any(Specification.class), Mockito.eq(pageable));
+        verify(bookMapper).toDto(book);
     }
 
     @Test
@@ -258,7 +284,10 @@ public class BookServiceTest {
 
         Page<BookDtoWithoutCategoryIds> result = bookService.getBooksByCategoryId(pageable, categoryId);
 
-        Assertions.assertEquals(1, result.getTotalElements());
-        Assertions.assertEquals("Sample Book", result.getContent().get(0).getTitle());
+        assertEquals(1, result.getTotalElements());
+        assertEquals("Sample Book", result.getContent().get(0).getTitle());
+
+        verify(bookRepository).findAllByCategories_Id(pageable, categoryId);
+        verify(bookMapper).toDtoWithoutCategories(book);
     }
 }

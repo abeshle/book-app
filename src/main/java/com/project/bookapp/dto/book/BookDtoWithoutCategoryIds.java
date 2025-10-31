@@ -2,8 +2,10 @@ package com.project.bookapp.dto.book;
 
 import java.math.BigDecimal;
 import lombok.Data;
+import lombok.experimental.Accessors;
 
 @Data
+@Accessors
 public class BookDtoWithoutCategoryIds {
     private Long id;
     private String title;
