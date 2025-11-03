@@ -1,5 +1,11 @@
 package com.project.bookapp.category;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+
 import com.project.bookapp.dto.category.CategoryRequestDto;
 import com.project.bookapp.dto.category.CategoryResponseDto;
 import com.project.bookapp.exceptions.EntityNotFoundException;
@@ -7,7 +13,8 @@ import com.project.bookapp.mapper.CategoryMapper;
 import com.project.bookapp.model.Category;
 import com.project.bookapp.repository.category.CategoryRepository;
 import com.project.bookapp.service.CategoryServiceImpl;
-import org.junit.jupiter.api.Assertions;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,15 +26,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 public class CategoryServiceTest {
@@ -42,11 +40,8 @@ public class CategoryServiceTest {
     private CategoryServiceImpl categoryService;
 
     @Test
-    @DisplayName("""
-    Should return all paginated books
-    """)
+    @DisplayName("Should return all paginated books")
     public void findAll_shouldReturnAllBooksDto() {
-        Pageable pageable = PageRequest.of(0, 2);
 
         Category category1 = new Category();
         category1.setId(1L);
@@ -56,9 +51,6 @@ public class CategoryServiceTest {
         category2.setId(2L);
         category1.setName("Fantasy");
 
-        List<Category> categories = List.of(category1, category2);
-        Page<Category> categoryPage = new PageImpl<>(categories, pageable, categories.size());
-
         CategoryResponseDto dto1 = new CategoryResponseDto();
         dto1.setId(1L);
         dto1.setName("Fiction");
@@ -66,6 +58,12 @@ public class CategoryServiceTest {
         CategoryResponseDto dto2 = new CategoryResponseDto();
         dto2.setId(2L);
         dto2.setName("Fantasy");
+
+        Pageable pageable = PageRequest.of(0, 2);
+
+        List<Category> categories = List.of(category1, category2);
+
+        Page<Category> categoryPage = new PageImpl<>(categories, pageable, categories.size());
 
         Mockito.when(categoryRepository.findAll(pageable)).thenReturn(categoryPage);
         Mockito.when(categoryMapper.toDto(category1)).thenReturn(dto1);

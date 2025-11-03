@@ -1,14 +1,43 @@
 package com.project.bookapp.book;
 
+import static com.project.bookapp.book.TestUtil.getBookDto;
+import static com.project.bookapp.book.TestUtil.getBookDtoFromUpdatedBookRequestDto;
+import static com.project.bookapp.book.TestUtil.getTestBookDto;
+import static com.project.bookapp.book.TestUtil.getTheFirstBook;
+import static com.project.bookapp.book.TestUtil.getTheSecondBook;
+import static com.project.bookapp.book.TestUtil.getTheThirdBook;
+import static com.project.bookapp.book.TestUtil.getUpdateBookRequestDto;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.testcontainers.shaded.org.apache.commons.lang3.builder.EqualsBuilder.reflectionEquals;
+
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.bookapp.dto.book.BookDto;
 import com.project.bookapp.dto.book.BookDtoWithoutCategoryIds;
 import com.project.bookapp.dto.book.CreateBookRequestDto;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import javax.sql.DataSource;
 import lombok.SneakyThrows;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.MediaType;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.jdbc.Sql;
@@ -16,24 +45,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.http.MediaType;
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-
-import static com.project.bookapp.book.TestUtil.*;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.testcontainers.shaded.org.apache.commons.lang3.builder.EqualsBuilder.reflectionEquals;
-
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class BookControllerTest {
@@ -148,11 +159,8 @@ class BookControllerTest {
     @DisplayName("Find book by id")
     @WithMockUser(username = "user", roles = {"USER"})
     void findById_GivenExistingBookId_ShouldReturnBook() throws Exception {
-        BookDto expectedFirst = getTheFirstBook();
-        MvcResult mvcResult = mockMvc.perform(
-                        get("/books/1")
-                                .contentType(MediaType.APPLICATION_JSON)
-                )
+        MvcResult mvcResult = mockMvc.perform(get("/books/1")
+                                .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -165,21 +173,21 @@ class BookControllerTest {
         assertTrue(content.isArray());
         assertTrue(content.size() > 0);
 
-        BookDtoWithoutCategoryIds actualFirst  = objectMapper.treeToValue(content.get(0), BookDtoWithoutCategoryIds.class);
+        BookDtoWithoutCategoryIds actualFirst = objectMapper.treeToValue(content.get(0),
+                BookDtoWithoutCategoryIds.class);
+
+        BookDto expectedFirst = getTheFirstBook();
 
         System.out.println("Expected: " + expectedFirst);
-        System.out.println("Actual:   " + actualFirst );
+        System.out.println("Actual:   " + actualFirst);
 
-        Assertions.assertNotNull(actualFirst );
+        Assertions.assertNotNull(actualFirst);
         assertEquals(expectedFirst.getTitle(), actualFirst.getTitle());
         assertEquals(expectedFirst.getAuthor(), actualFirst.getAuthor());
         assertEquals(expectedFirst.getIsbn(), actualFirst.getIsbn());
 
-        BookDto expectedThird = getTheThirdBook();
-        mvcResult = mockMvc.perform(
-                        get("/books/3")
-                                .contentType(MediaType.APPLICATION_JSON)
-                )
+        mvcResult = mockMvc.perform(get("/books/3")
+                                .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -194,6 +202,7 @@ class BookControllerTest {
 
         BookDtoWithoutCategoryIds actualThird =
                 objectMapper.treeToValue(content.get(0), BookDtoWithoutCategoryIds.class);
+        BookDto expectedThird = getTheThirdBook();
 
         assertNotNull(actualThird);
         assertEquals(expectedThird.getTitle(), actualThird.getTitle());

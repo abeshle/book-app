@@ -195,7 +195,7 @@
                     <consoleOutput>true</consoleOutput>
                     <failsOnError>true</failsOnError>
                     <linkXRef>false</linkXRef>
-                    <sourceDirectories>src/main/java</sourceDirectories>
+                    <sourceDirectories>src/main/java,src/test/java</sourceDirectories>
                 </configuration>
             </plugin>
 

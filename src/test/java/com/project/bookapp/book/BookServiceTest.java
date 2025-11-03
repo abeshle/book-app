@@ -1,12 +1,24 @@
 package com.project.bookapp.book;
 
-import com.project.bookapp.dto.book.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.verify;
+
+import com.project.bookapp.dto.book.BookDto;
+import com.project.bookapp.dto.book.BookDtoWithoutCategoryIds;
+import com.project.bookapp.dto.book.BookSearchParametersDto;
+import com.project.bookapp.dto.book.CreateBookRequestDto;
+import com.project.bookapp.dto.book.UpdateBookRequestDto;
 import com.project.bookapp.exceptions.EntityNotFoundException;
 import com.project.bookapp.mapper.BookMapper;
 import com.project.bookapp.model.Book;
 import com.project.bookapp.repository.book.BookRepository;
 import com.project.bookapp.repository.book.BookSpecificationBuilder;
 import com.project.bookapp.service.BookServiceImpl;
+import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,15 +32,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-
-import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 public class BookServiceTest {
@@ -78,7 +81,6 @@ public class BookServiceTest {
     @Test
     @DisplayName("Find all books")
     public void findAll_shouldReturnAllBooksDto() {
-        Pageable pageable = PageRequest.of(0, 2);
 
         Book book1 = new Book();
         book1.setId(1L);
@@ -89,18 +91,22 @@ public class BookServiceTest {
         book2.setTitle("Book 2");
 
         List<Book> books = List.of(book1, book2);
+
+        Pageable pageable = PageRequest.of(0, 2);
+
         Page<Book> bookPage = new PageImpl<>(books, pageable, books.size());
 
         BookDto dto1 = new BookDto();
         dto1.setId(1L);
         dto1.setTitle("Book 1");
 
+        Mockito.when(bookRepository.findAll(pageable)).thenReturn(bookPage);
+        Mockito.when(bookMapper.toDto(book1)).thenReturn(dto1);
+
         BookDto dto2 = new BookDto();
         dto2.setId(2L);
         dto2.setTitle("Book 2");
 
-        Mockito.when(bookRepository.findAll(pageable)).thenReturn(bookPage);
-        Mockito.when(bookMapper.toDto(book1)).thenReturn(dto1);
         Mockito.when(bookMapper.toDto(book2)).thenReturn(dto2);
 
         Page<BookDto> result = bookService.findAll(pageable);
@@ -219,13 +225,6 @@ public class BookServiceTest {
     @Test
     @DisplayName("Should return paginated books based on search parameters")
     public void search_withValidParams_shouldReturnPaginatedBooks() {
-        String searchTitle = "Some Book";
-        String searchAuthor = "John Doe";
-        String searchIsbn = "123456789";
-
-        BookSearchParametersDto searchParams = new BookSearchParametersDto(searchTitle, searchAuthor, searchIsbn);
-
-        Pageable pageable = PageRequest.of(0, 10);
 
         Book book = new Book();
         book.setId(1L);
@@ -244,10 +243,20 @@ public class BookServiceTest {
         Page<Book> bookPage = new PageImpl<>(Arrays.asList(book));
         Page<BookDto> bookDtoPage = new PageImpl<>(Arrays.asList(bookDto));
 
-        Mockito.when(bookSpecificationBuilder.build(searchParams)).thenReturn(Specification.where(null));
+        String searchTitle = "Some Book";
+        String searchAuthor = "John Doe";
+        String searchIsbn = "123456789";
+
+        BookSearchParametersDto searchParams =
+                new BookSearchParametersDto(searchTitle, searchAuthor, searchIsbn);
+
+        Mockito.when(bookSpecificationBuilder.build(searchParams))
+                .thenReturn(Specification.where(null));
         Mockito.when(bookRepository.findAll(Mockito.any(Specification.class),
                 Mockito.any(Pageable.class))).thenReturn(bookPage);
         Mockito.when(bookMapper.toDto(book)).thenReturn(bookDto);
+
+        Pageable pageable = PageRequest.of(0, 10);
 
         Page<BookDto> result = bookService.search(searchParams, pageable);
 
@@ -264,9 +273,6 @@ public class BookServiceTest {
     @Test
     @DisplayName("Should return books for a given category ID")
     public void getBooksByCategoryId_withValidCategoryId_shouldReturnBooks() {
-        // Arrange
-        Long categoryId = 1L;
-        Pageable pageable = PageRequest.of(0, 10);
 
         Book book = new Book();
         book.setId(1L);
@@ -277,12 +283,20 @@ public class BookServiceTest {
         bookDtoWithoutCategories.setTitle("Sample Book");
 
         Page<Book> bookPage = new PageImpl<>(Collections.singletonList(book));
-        Page<BookDtoWithoutCategoryIds> bookDtoPage = new PageImpl<>(Collections.singletonList(bookDtoWithoutCategories));
+        Page<BookDtoWithoutCategoryIds> bookDtoPage =
+                new PageImpl<>(Collections.singletonList(bookDtoWithoutCategories));
 
-        Mockito.when(bookRepository.findAllByCategories_Id(Mockito.eq(pageable), Mockito.eq(categoryId))).thenReturn(bookPage);
-        Mockito.when(bookMapper.toDtoWithoutCategories(book)).thenReturn(bookDtoWithoutCategories);
+        Pageable pageable = PageRequest.of(0, 10);
 
-        Page<BookDtoWithoutCategoryIds> result = bookService.getBooksByCategoryId(pageable, categoryId);
+        Long categoryId = 1L;
+
+        Mockito.when(bookRepository.findAllByCategories_Id(Mockito.eq(pageable),
+                Mockito.eq(categoryId))).thenReturn(bookPage);
+        Mockito.when(bookMapper.toDtoWithoutCategories(book))
+                .thenReturn(bookDtoWithoutCategories);
+
+        Page<BookDtoWithoutCategoryIds> result =
+                bookService.getBooksByCategoryId(pageable, categoryId);
 
         assertEquals(1, result.getTotalElements());
         assertEquals("Sample Book", result.getContent().get(0).getTitle());
