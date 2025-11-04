@@ -1,5 +1,8 @@
 package com.project.bookapp.category;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -20,7 +23,6 @@ import java.util.List;
 import javax.sql.DataSource;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -106,9 +108,9 @@ class CategoryControllerTest {
         CategoryResponseDto actual = objectMapper
                 .readValue(result.getResponse().getContentAsString(), CategoryResponseDto.class);
 
-        Assertions.assertNotNull(actual);
+        assertNotNull(actual);
 
-        Assertions.assertTrue(reflectionEquals(expected, actual, "id"));
+        assertTrue(reflectionEquals(expected, actual, "id"));
     }
 
     @WithMockUser(roles = "USER")
@@ -132,9 +134,9 @@ class CategoryControllerTest {
         CategoryResponseDto[] actual = objectMapper.readValue(
                 root.get("content").traverse(), CategoryResponseDto[].class);
 
-        Assertions.assertEquals(3, actual.length);
+        assertEquals(3, actual.length);
 
-        Assertions.assertEquals(expected, Arrays.stream(actual).toList());
+        assertEquals(expected, Arrays.stream(actual).toList());
     }
 
     @WithMockUser(roles = "USER")
@@ -158,9 +160,9 @@ class CategoryControllerTest {
         CategoryResponseDto actual = objectMapper
                 .readValue(result.getResponse().getContentAsString(), CategoryResponseDto.class);
 
-        Assertions.assertNotNull(actual);
+        assertNotNull(actual);
 
-        Assertions.assertEquals(expected, actual);
+        assertEquals(expected, actual);
     }
 
     @WithMockUser(username = "admin", roles = {"ADMIN"})
@@ -190,9 +192,9 @@ class CategoryControllerTest {
         CategoryResponseDto actual = objectMapper
                 .readValue(result.getResponse().getContentAsString(), CategoryResponseDto.class);
 
-        Assertions.assertNotNull(actual);
+        assertNotNull(actual);
 
-        Assertions.assertEquals(expected, actual);
+        assertEquals(expected, actual);
     }
 
     @Test

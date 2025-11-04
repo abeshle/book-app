@@ -30,7 +30,6 @@ import java.util.List;
 import javax.sql.DataSource;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -123,8 +122,6 @@ class BookControllerTest {
         );
         assertNotNull(actual);
         assertNotNull(actual.getId());
-        System.out.println("Expected: " + expected);
-        System.out.println("Actual:   " + actual);
         assertTrue(reflectionEquals(expected, actual, "id","categoryIds"));
     }
 
@@ -147,8 +144,6 @@ class BookControllerTest {
         BookDto[] actual = objectMapper.treeToValue(root.get("content"), BookDto[].class);
 
         assertEquals(3, actual.length);
-        System.out.println("Expected: " + expected);
-        System.out.println("Actual:   " + actual);
         for (int i = 0; i < expected.size(); i++) {
             assertTrue(reflectionEquals(expected.get(i), actual[i],
                     "id", "description", "coverImage", "categoryIds"));
@@ -178,10 +173,7 @@ class BookControllerTest {
 
         BookDto expectedFirst = getTheFirstBook();
 
-        System.out.println("Expected: " + expectedFirst);
-        System.out.println("Actual:   " + actualFirst);
-
-        Assertions.assertNotNull(actualFirst);
+        assertNotNull(actualFirst);
         assertEquals(expectedFirst.getTitle(), actualFirst.getTitle());
         assertEquals(expectedFirst.getAuthor(), actualFirst.getAuthor());
         assertEquals(expectedFirst.getIsbn(), actualFirst.getIsbn());
@@ -252,8 +244,3 @@ class BookControllerTest {
         assertTrue(reflectionEquals(expected, actual,"categoryIds"));
     }
 }
-
-
-
-
-
