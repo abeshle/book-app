@@ -1,236 +1,331 @@
-📚 Book App – Backend API
-🚀 Overview
+# 📚 Book Store REST API
 
-Book App is a RESTful backend application built with Spring Boot that powers a full-featured online bookstore.
-It supports user registration, authentication via JWT tokens, browsing books and categories, managing a shopping cart, and placing orders.
-This project was created to demonstrate a modular, secure, and scalable backend architecture for modern e-commerce systems.
+This project is a backend-only Book Store application built with **Spring Boot**.  
+It provides a secure REST API for managing books, categories, shopping carts, and orders.
 
-💡 Features
+The application supports two roles:
 
-🔐 JWT-based authentication and role-based access control
+| Role  | Description |
+|------|-------------|
+| `USER`  | Can browse books, manage personal shopping cart, place orders |
+| `ADMIN` | Can create, update and delete books and categories |
 
-👥 User roles: ROLE_USER and ROLE_ADMIN
+---
 
-📚 CRUD operations for Books and Categories
+## 🚀 Features
 
-🛒 Shopping Cart management
+### Authentication & Authorization
 
-💳 Order creation and history tracking
+- JWT-based authentication
+- Role-based access control (`USER`, `ADMIN`)
 
-🧾 Interactive API documentation via Swagger UI
+### Book Management
 
-🧩 Tech Stack
-Layer	Technology
-Language	Java 17+
-Framework	Spring Boot
-Security	Spring Security + JWT
-Database	MySQL
-ORM	Hibernate, Spring Data JPA
-Mapping	MapStruct
-Utilities	Lombok
-API Docs	Swagger / OpenAPI
-Build Tool	Maven
-🗂️ Core Entities
+- List all books (USER)
+- Create / Update / Delete books (ADMIN)
+- Search books by filters
+- View books by category
 
-User — contains authentication and role data
+### Shopping Cart
 
-Role — defines access level (USER / ADMIN)
+- Add items to cart (USER)
+- Update quantities
+- View and remove cart items
 
-Book — represents a book in the store
+### Orders
 
-Category — groups books logically
+- Place orders from cart (USER)
+- View order history
+- View individual order items
+- Update order status (ADMIN)
 
-ShoppingCart — holds selected items for purchase
+---
 
-CartItem — individual book entries in the cart
+## 🧱 Technologies Used
 
-Order — user purchase record
+| Technology | Purpose |
+|-----------|---------|
+| Java 17 | Language |
+| Spring Boot | Application framework |
+| Spring Security + JWT | Auth and security |
+| Spring Data JPA | ORM / Repository layer |
+| Hibernate | JPA provider |
+| Swagger / OpenAPI | API documentation |
+| MySQL | Database |
+| Docker & Docker Compose | Containerization |
 
-OrderItem — item details within an order
+---
 
-⚙️ Installation & Setup
-1️⃣ Clone the Repository
-git clone https://github.com/abeshle/book-app.git
-cd book-app
+## 🗂️ Project Structure (Main Modules)
 
-2️⃣ Create a MySQL Database
-CREATE DATABASE book_app_db;
+controller/ → API REST controllers
+service/ → Business logic
+repository/ → Spring Data JPA repositories
+model/ → JPA entities
+dto/ → Request/Response DTOs
+security/ → JWT filters and authentication logic
 
-3️⃣ Configure Application Properties
 
-Edit src/main/resources/application.properties:
+---
 
-spring.application.name=book-app
+## 🧩 Model Diagram
 
-spring.datasource.url=jdbc:mysql://localhost:3306/book_app_db?serverTimezone=UTC
-spring.datasource.username=root
-spring.datasource.password=yourPassword
-spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+```mermaid
+erDiagram
 
-spring.jpa.hibernate.ddl-auto=update
-spring.jpa.show-sql=true
-spring.jpa.database-platform=org.hibernate.dialect.MySQLDialect
+    User {
+        Long id
+        String email
+        String password
+        String firstName
+        String lastName
+        Role role
+    }
 
-jwt.secret=mySuperSecretKey123
-jwt.expiration=3600000
+    Category {
+        Long id
+        String name
+        String description
+    }
 
-4️⃣ Build and Run
-mvn clean install
-mvn spring-boot:run
+    Book {
+        Long id
+        String title
+        String author
+        BigDecimal price
+        String description
+    }
 
-5️⃣ Access Swagger UI
+    ShoppingCart {
+        Long id
+    }
 
-Visit:
-👉 http://localhost:8080/swagger-ui/index.html
+    CartItem {
+        Long id
+        Integer quantity
+    }
 
-📖 Controller Overview
-🔐 AuthenticationController (/auth)
+    Order {
+        Long id
+        LocalDateTime orderDate
+        OrderStatus status
+    }
 
-Handles registration and login.
+    OrderItem {
+        Long id
+        Integer quantity
+        BigDecimal price
+    }
 
-POST /auth/registration — Register new user
+    User ||--|| ShoppingCart : "has one"
+    ShoppingCart ||--o{ CartItem : "contains"
+    CartItem }o--|| Book : "refers to"
 
-POST /auth/login — Authenticate and return JWT token
+    User ||--o{ Order : "places"
+    Order ||--o{ OrderItem : "contains"
+    OrderItem }o--|| Book : "refers to"
 
-📚 BookController (/books)
+    Book }o--o{ Category : "categorized" 
+```
 
-Manage books in the store.
+🐳 Running the Application with Docker
 
-GET /books — Get all books (USER)
+This project includes a preconfigured env.template file, which is used to supply environment variables during container
+runtime.
 
-GET /books/{id} — Get books by category ID (USER)
+1️⃣ Create the .env file
 
-POST /books — Create a book (ADMIN)
+Before running the application, copy the template:
 
-PUT /books/{id} — Update a book (ADMIN)
+cp env.template .env
 
-DELETE /books/{id} — Delete a book (ADMIN)
+2️⃣ Open .env and update values if needed
 
-GET /books/search — Search books (USER)
+You already have the necessary environment variables defined there.
+Simply adjust them to match your local environment (e.g., MySQL password or ports).
 
-🏷️ CategoryController (/categories)
+⚠️ Important:
+The .env file is meant for private configuration and should not be committed to the repository.
+Make sure .env is listed in .gitignore.
 
-Manage book categories.
+3️⃣ Start the application
+docker-compose up --build
 
-POST /categories — Create new category (ADMIN)
+This will automatically:
 
-GET /categories — Get all categories (USER)
+Start the MySQL database container
 
-GET /categories/{id} — Get category by ID (USER)
+Start the Spring Boot application container
 
-PUT /categories/{id} — Update category (ADMIN)
+Apply schema and create tables
 
-DELETE /categories/{id} — Delete category (ADMIN)
+Expose the REST API on your configured port (example: http://localhost:8080/)
 
-GET /categories/{id}/books — Get books by category (USER)
+🔌 Swagger API Documentation
 
-🛒 CartController (/cart)
+After the application starts successfully, open:
 
-Manage user’s shopping cart.
+http://localhost:8080/swagger-ui/index.html
 
-GET /cart — View cart (USER)
+This provides interactive documentation and allows testing endpoints directly in the browser.
 
-POST /cart — Add item to cart (USER)
+📦 Postman Collection
 
-PUT /cart/cart-items/{cartItemId} — Update item quantity (USER)
+To make API testing easy, this project includes a Postman collection.
 
-DELETE /cart/cart-items/{cartItemId} — Remove item (USER)
+✔ I will now generate a clean, organized Postman collection for the following groups:
 
-💳 OrderController (/orders)
+Authentication (/auth/**)
 
-Handle user orders.
+Books (/books/**)
 
-GET /orders — View order history (USER)
+Categories (/categories/**)
 
-POST /orders — Place new order (USER)
+Cart (/cart/**)
 
-GET /orders/{orderId} — Get order by ID (USER)
+Orders (/orders/**)
 
-GET /orders/{orderId}/items — Get all items in an order (USER)
-
-GET /orders/{orderId}/items/{itemId} — Get a specific order item (USER)
-
-PATCH /orders/{orderId} — Update order status (ADMIN)
-
-💬 Example API Usage (Postman)
-1️⃣ Register
-POST /auth/registration
-Content-Type: application/json
-
+````
 {
-"email": "john@example.com",
-"password": "123456",
-"firstName": "John",
-"lastName": "Doe"
-}
-
-2️⃣ Login
-POST /auth/login
-
+"info": {
+"name": "Bookstore API",
+"_postman_id": "d8f5b1b6-3e67-4d9a-9f22-0e0c5c62d901",
+"description": "API collection for Bookstore Backend Application",
+"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+},
+"item": [
 {
-"email": "john@example.com",
-"password": "123456"
-}
-
-
-Response:
-
+"name": "Auth",
+"item": [
 {
-"token": "eyJhbGciOiJIUzI1NiJ9..."
+"name": "Register",
+"request": {
+"method": "POST",
+"header": [],
+"url": "{{baseUrl}}/auth/registration",
+"body": {
+"mode": "raw",
+"raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"12345678\",\n  \"repeatPassword\": \"12345678\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\"\n}"
 }
-
-
-Use this in all protected requests:
-
-Authorization: Bearer <your_token>
-
-3️⃣ Add Book to Cart
-POST /cart
-Authorization: Bearer <your_token>
-Content-Type: application/json
-
+}
+},
 {
-"bookId": 1,
-"quantity": 2
+"name": "Login",
+"request": {
+"method": "POST",
+"url": "{{baseUrl}}/auth/login",
+"body": {
+"mode": "raw",
+"raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"12345678\"\n}"
 }
+},
+"response": []
+}
+]
+},
+{
+"name": "Books",
+"item": [
+{
+"name": "Get All Books",
+"request": { "method": "GET", "url": "{{baseUrl}}/books" }
+},
+{
+"name": "Create Book (MANAGER)",
+"request": {
+"method": "POST",
+"header": [
+{ "key": "Authorization", "value": "Bearer {{token}}" }
+],
+"url": "{{baseUrl}}/books",
+"body": {
+"mode": "raw",
+"raw": "{\n  \"title\": \"Clean Code\",\n  \"author\": \"Robert C. Martin\",\n  \"price\": 29.99,\n  \"description\": \"A Handbook of Agile Software Craftsmanship\",\n  \"categoryIds\": [1]\n}"
+}
+}
+}
+]
+},
+{
+"name": "Categories",
+"item": [
+{
+"name": "Get All Categories",
+"request": { "method": "GET", "url": "{{baseUrl}}/categories" }
+},
+{
+"name": "Create Category (MANAGER)",
+"request": {
+"method": "POST",
+"header": [
+{ "key": "Authorization", "value": "Bearer {{token}}" }
+],
+"url": "{{baseUrl}}/categories",
+"body": {
+"mode": "raw",
+"raw": "{\n  \"name\": \"Programming\",\n  \"description\": \"Books about software development\"\n}"
+}
+}
+}
+]
+},
+{
+"name": "Shopping Cart",
+"item": [
+{
+"name": "Get My Cart",
+"request": {
+"method": "GET",
+"header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+"url": "{{baseUrl}}/cart"
+}
+},
+{
+"name": "Add Book to Cart",
+"request": {
+"method": "POST",
+"header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+"url": "{{baseUrl}}/cart",
+"body": {
+"mode": "raw",
+"raw": "{\n  \"bookId\": 1,\n  \"quantity\": 2\n}"
+}
+}
+}
+]
+},
+{
+"name": "Orders",
+"item": [
+{
+"name": "Place Order",
+"request": {
+"method": "POST",
+"header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+"url": "{{baseUrl}}/orders"
+}
+},
+{
+"name": "Get My Orders",
+"request": {
+"method": "GET",
+"header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+"url": "{{baseUrl}}/orders"
+}
+}
+]
+}
+],
+"variable": [
+{ "key": "baseUrl", "value": "http://localhost:8080" },
+{ "key": "token", "value": "" }
+]
+}
+````
+👨‍💻 Author
 
-4️⃣ Place Order
-POST /orders
-Authorization: Bearer <your_token>
+Anastasiia Beshleha(Abeshle)
 
-🧭 Application Flow
+📧 anastasiiabeshleha@gmail.com
 
-[User Registers or Logs In]
-
-↓
-
-[JWT Token Generated]
-
-↓
-
-[User Browses Books & Adds to Cart]
-
-↓
-
-[User Places Order]
-
-↓
-
-[Order Saved, Cart Emptied]
-
-🧗 Challenges & Solutions
-
-Challenge	Solution
-
-Implementing JWT authentication securely	Added a JwtAuthenticationFilter and stateless sessions
-
-Mapping DTOs and Entities	Used MapStruct for efficient conversions
-
-Role-based access control	Used @PreAuthorize annotations with Spring Security
-
-Managing lazy-loaded relationships	Used @Transactional and pagination via Spring Data JPA
-
-🧑‍💻 Author
-
-Abeshle
-🔗 GitHub Repository
+If you found this project useful — ⭐ star the repo!
