@@ -1,13 +1,42 @@
 package com.project.bookapp.book;
 
+import static com.project.bookapp.book.TestUtil.getBookDto;
+import static com.project.bookapp.book.TestUtil.getBookDtoFromUpdatedBookRequestDto;
+import static com.project.bookapp.book.TestUtil.getTestBookDto;
+import static com.project.bookapp.book.TestUtil.getTheFirstBook;
+import static com.project.bookapp.book.TestUtil.getTheSecondBook;
+import static com.project.bookapp.book.TestUtil.getTheThirdBook;
+import static com.project.bookapp.book.TestUtil.getUpdateBookRequestDto;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.testcontainers.shaded.org.apache.commons.lang3.builder.EqualsBuilder.reflectionEquals;
+
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.bookapp.dto.book.BookDto;
+import com.project.bookapp.dto.book.BookDtoWithoutCategoryIds;
 import com.project.bookapp.dto.book.CreateBookRequestDto;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import javax.sql.DataSource;
 import lombok.SneakyThrows;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.MediaType;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.jdbc.Sql;
@@ -15,29 +44,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.http.MediaType;
-import org.testcontainers.shaded.org.apache.commons.lang3.builder.EqualsBuilder;
-
-import javax.sql.DataSource;
-import java.math.BigDecimal;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class BookControllerTest {
-    public static final double UPDATED_BOOK_PRICE = 999.99;
     private static MockMvc mockMvc;
     @Autowired
     private ObjectMapper objectMapper;
@@ -111,20 +120,14 @@ class BookControllerTest {
                 mvcResult.getResponse().getContentAsString(),
                 BookDto.class
         );
-        Assertions.assertNotNull(actual);
-        Assertions.assertNotNull(actual.getId());
-        EqualsBuilder.reflectionEquals(expected, actual, "id");
+        assertNotNull(actual);
+        assertNotNull(actual.getId());
+        assertTrue(reflectionEquals(expected, actual, "id","categoryIds"));
     }
 
     @Test
     @DisplayName("Get all books")
     @WithMockUser(username = "user", roles = {"USER"})
-//    @Sql(scripts = {"classpath:database/add-categories.sql",
-//            "classpath:database/add-three-books.sql"},
-//            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-//    @Sql(scripts = {"classpath:database/remove-all-books.sql",
-//            "classpath:database/remove-all-categories.sql"},
-//            executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     void getAll_GivenBooksInCatalog_ShouldReturnAllBooks() throws Exception {
         List<BookDto> expected = new ArrayList<>();
         expected.add(getTheFirstBook());
@@ -140,47 +143,63 @@ class BookControllerTest {
         JsonNode root = objectMapper.readTree(mvcResult.getResponse().getContentAsString());
         BookDto[] actual = objectMapper.treeToValue(root.get("content"), BookDto[].class);
 
-        Assertions.assertEquals(3, actual.length);
-        EqualsBuilder.reflectionEquals(expected, Arrays.stream(actual).toList(), "id","description","coverImage","categoryIds");
-
+        assertEquals(3, actual.length);
+        for (int i = 0; i < expected.size(); i++) {
+            assertTrue(reflectionEquals(expected.get(i), actual[i],
+                    "id", "description", "coverImage", "categoryIds"));
+        }
     }
 
     @Test
     @DisplayName("Find book by id")
     @WithMockUser(username = "user", roles = {"USER"})
-//    @Sql(scripts = {"classpath:database/add-categories.sql",
-//            "classpath:database/add-three-books.sql"},
-//            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-//    @Sql(scripts = {"classpath:database/remove-all-books.sql",
-//            "classpath:database/remove-all-categories.sql"},
-//            executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     void findById_GivenExistingBookId_ShouldReturnBook() throws Exception {
-        BookDto expected1 = getTheFirstBook();
-        MvcResult mvcResult = mockMvc.perform(
-                        get("/books/1")
-                                .contentType(MediaType.APPLICATION_JSON)
-                )
+        MvcResult mvcResult = mockMvc.perform(get("/books/1")
+                                .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
-        BookDto actual1 = objectMapper.readValue(
-                mvcResult.getResponse().getContentAsString(),
-                BookDto.class
-        );
-        Assertions.assertNotNull(actual1);
-        EqualsBuilder.reflectionEquals(expected1, actual1);
-        BookDto expected3 = getTheThirdBook();
-        mvcResult = mockMvc.perform(
-                        get("/books/3")
-                                .contentType(MediaType.APPLICATION_JSON)
-                )
+
+        String response = mvcResult.getResponse().getContentAsString();
+
+        JsonNode root = objectMapper.readTree(response);
+        JsonNode content = root.get("content");
+
+        assertNotNull(content);
+        assertTrue(content.isArray());
+        assertTrue(content.size() > 0);
+
+        BookDtoWithoutCategoryIds actualFirst = objectMapper.treeToValue(content.get(0),
+                BookDtoWithoutCategoryIds.class);
+
+        BookDto expectedFirst = getTheFirstBook();
+
+        assertNotNull(actualFirst);
+        assertEquals(expectedFirst.getTitle(), actualFirst.getTitle());
+        assertEquals(expectedFirst.getAuthor(), actualFirst.getAuthor());
+        assertEquals(expectedFirst.getIsbn(), actualFirst.getIsbn());
+
+        mvcResult = mockMvc.perform(get("/books/3")
+                                .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
-        BookDto actual3 = objectMapper.readValue(
-                mvcResult.getResponse().getContentAsString(),
-                BookDto.class
-        );
-        Assertions.assertNotNull(actual3);
-        EqualsBuilder.reflectionEquals(expected3, actual3);
+
+        response = mvcResult.getResponse().getContentAsString();
+
+        root = objectMapper.readTree(response);
+        content = root.get("content");
+
+        assertNotNull(content);
+        assertTrue(content.isArray());
+        assertTrue(content.size() > 0);
+
+        BookDtoWithoutCategoryIds actualThird =
+                objectMapper.treeToValue(content.get(0), BookDtoWithoutCategoryIds.class);
+        BookDto expectedThird = getTheThirdBook();
+
+        assertNotNull(actualThird);
+        assertEquals(expectedThird.getTitle(), actualThird.getTitle());
+        assertEquals(expectedThird.getAuthor(), actualThird.getAuthor());
+        assertEquals(expectedThird.getIsbn(), actualThird.getIsbn());
     }
 
     @Test
@@ -200,18 +219,12 @@ class BookControllerTest {
                 .andExpect(status().isNoContent())
                 .andReturn();
         String actual = mvcResult.getResponse().getContentAsString();
-        Assertions.assertTrue(actual.isEmpty());
+        assertTrue(actual.isEmpty());
     }
 
     @Test
     @DisplayName("Update book by id")
     @WithMockUser(username = "admin", roles = {"ADMIN"})
-//    @Sql(scripts = {"classpath:database/add-categories.sql",
-//            "classpath:database/add-three-books.sql"},
-//            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-//    @Sql(scripts = {"classpath:database/remove-all-books.sql",
-//            "classpath:database/remove-all-categories.sql"},
-//            executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     void updateBook_UpdateExistedBook_Success() throws Exception {
         CreateBookRequestDto updateBookRequestDto = getUpdateBookRequestDto();
         BookDto expected = getBookDtoFromUpdatedBookRequestDto(updateBookRequestDto);
@@ -227,97 +240,7 @@ class BookControllerTest {
                 mvcResult.getResponse().getContentAsString(),
                 BookDto.class
         );
-        Assertions.assertNotNull(actual);
-        EqualsBuilder.reflectionEquals(expected, actual);
-    }
-
-    private BookDto getBookDtoFromUpdatedBookRequestDto(CreateBookRequestDto updateBookRequestDto) {
-        return new BookDto()
-                .setId(1L)
-                .setTitle(updateBookRequestDto.getTitle())
-                .setAuthor(updateBookRequestDto.getAuthor())
-                .setIsbn(updateBookRequestDto.getIsbn())
-                .setPrice(BigDecimal.valueOf(UPDATED_BOOK_PRICE))
-                .setDescription(updateBookRequestDto.getDescription())
-                .setCoverImage(updateBookRequestDto.getCoverImage());
-    }
-
-    private CreateBookRequestDto getUpdateBookRequestDto() {
-        CreateBookRequestDto updateBookRequestDto = new CreateBookRequestDto();
-        updateBookRequestDto.setId(1L)
-                .setTitle("Test Book 1")
-                .setAuthor("One")
-                .setPrice(BigDecimal.valueOf(10.10))
-                .setIsbn("978-0000000009")
-                .setDescription("Description")
-                .setCoverImage("https://example.com/cover.jpg")
-                .setCategoryIds(List.of(1L));
-        return updateBookRequestDto;
-    }
-
-    private BookDto getTheFirstBook() {
-        return new BookDto()
-                .setId(1L)
-                .setTitle("Test Book 1")
-                .setAuthor("One")
-                .setPrice(BigDecimal.valueOf(10.1))
-                .setIsbn("978-0000000001")
-                .setDescription("Description")
-                .setCoverImage("https://example.com/cover.jpg")
-                .setCategoryIds(List.of(1L));
-
-    }
-
-    private BookDto getTheSecondBook() {
-        return new BookDto()
-                .setId(2L)
-                .setTitle("Test Book 2")
-                .setAuthor("Two")
-                .setPrice(BigDecimal.valueOf(10.1))
-                .setIsbn("978-0000000002")
-                .setDescription("Description")
-                .setCoverImage("https://example.com/cover.jpg")
-                .setCategoryIds(List.of(1L));
-
-    }
-
-    private BookDto getTheThirdBook() {
-        return new BookDto()
-                .setId(3L)
-                .setTitle("Test Book 3")
-                .setAuthor("Three")
-                .setPrice(BigDecimal.valueOf(10.1))
-                .setIsbn("978-0000000003")
-                .setDescription("Description")
-                .setCoverImage("https://example.com/cover.jpg")
-                .setCategoryIds(List.of(1L));
-
-    }
-
-    private BookDto getBookDto(CreateBookRequestDto requestDto) {
-        return new BookDto()
-                .setId(1L)
-                .setTitle(requestDto.getTitle())
-                .setAuthor(requestDto.getAuthor())
-                .setIsbn(requestDto.getIsbn())
-                .setPrice(requestDto.getPrice())
-                .setDescription(requestDto.getDescription())
-                .setCoverImage(requestDto.getCoverImage());
-    }
-//
-    private CreateBookRequestDto getTestBookDto() {
-        return new CreateBookRequestDto()
-                .setId(1L)
-                .setTitle("Test Book")
-                .setAuthor("One")
-                .setPrice(BigDecimal.valueOf(10.1))
-                .setIsbn("978-0000000001")
-                .setDescription("Description")
-                .setCoverImage("https://example.com/cover.jpg")
-                .setCategoryIds(List.of(1L));
+        assertNotNull(actual);
+        assertTrue(reflectionEquals(expected, actual,"categoryIds"));
     }
 }
-
-
-
-
