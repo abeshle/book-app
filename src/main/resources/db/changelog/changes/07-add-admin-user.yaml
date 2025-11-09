@@ -1,0 +1,39 @@
+databaseChangeLog:
+  - changeSet:
+      id: add-admin-user
+      author: abeshle
+      changes:
+        - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  value: 4
+              - column:
+                  name: email
+                  value: "admin@email.com"
+              - column:
+                  name: password
+                  value: "$2a$12$7iCWzUxN8cLOB1bpIVE5uObv9zMYhj.URplDK5XCEQ6Uw.gIX1eQ."
+              - column:
+                  name: first_name
+                  value: "Admin"
+              - column:
+                  name: last_name
+                  value: "Admin"
+              - column:
+                  name: shipping_address
+                  value: "312 Unknown st"
+  - changeSet:
+      id: add-admin-role-to-admin-user
+      author: abeshle
+      changes:
+        - insert:
+            tableName: users_roles
+            columns:
+              - column:
+                  name: user_id
+                  value: 4
+              - column:
+                  name: role_id
+                  value: 2
